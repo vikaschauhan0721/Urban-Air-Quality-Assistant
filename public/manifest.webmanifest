@@ -1,0 +1,18 @@
+{
+  "name": "Saans — Urban Air Quality Assistant",
+  "short_name": "Saans",
+  "description": "Breathe easier, one choice at a time. GenAI-powered urban air quality & winter smog assistant.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fa",
+  "theme_color": "#0f766e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

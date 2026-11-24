@@ -1,0 +1,146 @@
+import type { Language } from "./types";
+
+export const UI_COPY = {
+  en: {
+    appName: "Saans",
+    tagline: "Breathe easier, one choice at a time.",
+    nav: {
+      home: "Home",
+      plan: "Plan",
+      ask: "Ask",
+      community: "Community",
+      profile: "Profile",
+    },
+    badges: {
+      simulating: "Smog Simulator · AQI ~312",
+      demoData: "Using offline / demo air data",
+      offline: "Offline · Showing saved data",
+      cpcb: "India CPCB",
+      us: "US AQI",
+    },
+    home: {
+      cleanestWindow: "Cleanest Outdoor Window",
+      householdAdvice: "Household Health Guide",
+      pollutantsTitle: "Pollutant Breakdown",
+      pollutantsSub: "Tap or inspect each pollutant to understand what drives today's AQI.",
+      forecastTitle: "24-Hour Air Quality Forecast",
+      forecastSub: "Highlighted band marks today's cleanest outdoor window.",
+      protectedToday: "Air You Protected Today",
+      openPlan: "Open Today's Plan",
+      dominant: "Dominant",
+    },
+    plan: {
+      title: "Today's Action Plan",
+      subtitle: "Tailored to your home, commute, and live air quality.",
+      tabs: {
+        routines: "Low-Emission Routines",
+        indoor: "Indoor Air Hacks",
+        swaps: "Sustainable Swaps",
+      },
+      seeImpact: "See impact math",
+      markDone: "Mark done",
+      completed: "Done",
+      progressLabel: "actions completed",
+      airProtected: "Indoor PM2.5 reduced",
+      co2Saved: "CO₂ avoided",
+      mythBusters: "Smog Myth Busters",
+    },
+    ask: {
+      title: "Ask Saans",
+      subtitle: "Grounded in your live AQI, household, and today's plan.",
+      placeholder: "Ask about masks, school commute, windows, or purifiers...",
+      send: "Send",
+      disclaimer:
+        "Guidance only — not medical advice. Seek urgent medical care for chest pain, wheezing, or severe breathlessness.",
+    },
+    community: {
+      title: "Family & Community Air Brief",
+      subtitle: "Share practical, calm air guidance with neighbours, schools, or your RWA.",
+      copyWhatsapp: "Copy WhatsApp Brief",
+      copied: "Copied!",
+      downloadCard: "Download Image Card",
+      collectiveTitle: "3 Collective Neighbourhood Actions",
+    },
+    profile: {
+      title: "Household & Simulator Controls",
+      demoFamily: "Load Demo Family (Delhi)",
+      simulatorLabel: "Winter Smog Simulator (AQI ~312)",
+      simulatorHint: "Test the full Very Poor experience even when real air is clean.",
+      editOnboarding: "Run 30-sec Setup Again",
+      privacy: "Privacy: your household profile stays strictly in localStorage on this device.",
+    },
+  },
+  hi: {
+    appName: "साँस (Saans)",
+    tagline: "आसान साँस, एक सही कदम के साथ।",
+    nav: {
+      home: "होम",
+      plan: "योजना",
+      ask: "पूछें",
+      community: "समुदाय",
+      profile: "प्रोफ़ाइल",
+    },
+    badges: {
+      simulating: "स्मॉग सिम्युलेटर · AQI ~312",
+      demoData: "ऑफ़लाइन / डेमो एयर डेटा",
+      offline: "ऑफ़लाइन · सहेजा डेटा दिख रहा है",
+      cpcb: "भारत CPCB",
+      us: "US AQI",
+    },
+    home: {
+      cleanestWindow: "बाहर जाने का सबसे साफ समय",
+      householdAdvice: "परिवार के लिए स्वास्थ्य सलाह",
+      pollutantsTitle: "प्रदूषण तत्वों का विवरण",
+      pollutantsSub: "आज का AQI किन कणों से बढ़ रहा है, नीचे देखें।",
+      forecastTitle: "24 घंटे का वायु गुणवत्ता अनुमान",
+      forecastSub: "रंगीन पट्टी आज का सबसे साफ समय दिखाती है।",
+      protectedToday: "आज आपने कितनी हवा बचाई",
+      openPlan: "आज की योजना खोलें",
+      dominant: "प्रमुख तत्व",
+    },
+    plan: {
+      title: "आज की कार्य योजना",
+      subtitle: "आपके घर, यात्रा और लाइव AQI के अनुसार चुने गए कदम।",
+      tabs: {
+        routines: "कम-धुएँ की दिनचर्या",
+        indoor: "घर के अंदर उपाय",
+        swaps: "टिकाऊ बदलाव",
+      },
+      seeImpact: "असर का गणित देखें",
+      markDone: "पूरा किया",
+      completed: "पूरा हुआ",
+      progressLabel: "कदम पूरे हुए",
+      airProtected: "घर का PM2.5 घटा",
+      co2Saved: "CO₂ की बचत",
+      mythBusters: "धुंध से जुड़े मिथक",
+    },
+    ask: {
+      title: "साँस से पूछें",
+      subtitle: "आपके लाइव AQI, परिवार और आज की योजना पर आधारित उत्तर।",
+      placeholder: "मास्क, स्कूल, खिड़की या प्यूरीफायर के बारे में पूछें...",
+      send: "भेजें",
+      disclaimer:
+        "यह केवल सामान्य जानकारी है, चिकित्सीय सलाह नहीं। सीने में दर्द या तेज़ सांस फूलने पर तुरंत डॉक्टर से मिलें।",
+    },
+    community: {
+      title: "परिवार व मोहल्ला एयर ब्रीफ़",
+      subtitle: "पड़ोसियों, स्कूल ग्रुप या RWA के साथ शांत और उपयोगी सलाह साझा करें।",
+      copyWhatsapp: "WhatsApp संदेश कॉपी करें",
+      copied: "कॉपी हो गया!",
+      downloadCard: "इमेज कार्ड डाउनलोड करें",
+      collectiveTitle: "मोहल्ले के 3 सामूहिक कदम",
+    },
+    profile: {
+      title: "परिवार और सिम्युलेटर नियंत्रण",
+      demoFamily: "डेमो परिवार लोड करें (दिल्ली)",
+      simulatorLabel: "विंटर स्मॉग सिम्युलेटर (AQI ~312)",
+      simulatorHint: "जब बाहर हवा साफ हो तब भी 'बहुत खराब' स्थिति का अनुभव जाँचें।",
+      editOnboarding: "30-सेकंड सेटअप फिर से चलाएँ",
+      privacy: "गोपनीयता: आपका प्रोफ़ाइल केवल आपके डिवाइस के localStorage में सुरक्षित रहता है।",
+    },
+  },
+} as const;
+
+export function getCopy(lang: Language) {
+  return UI_COPY[lang];
+}
