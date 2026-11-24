@@ -117,7 +117,8 @@ function buildPlan(event) {
 
   const plan = document.getElementById('plan');
   plan.hidden = false;
-  plan.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  plan.scrollIntoView({ behavior, block: 'start' });
 }
 
 document.getElementById('planner-form').addEventListener('submit', buildPlan);
