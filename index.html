@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7f2">
+    <meta name="description" content="A practical winter-smog planner for healthier routines at home and in your community.">
+    <title>Airwise — your clean-air day planner</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Airwise home">
+        <span class="brand-mark" aria-hidden="true">a</span>
+        <span>airwise<span class="brand-period">.</span></span>
+      </a>
+      <span class="topbar-note"><span class="live-dot" aria-hidden="true"></span> A little clearer, together</span>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span aria-hidden="true">✳</span> YOUR EVERYDAY CLEAN-AIR COMPANION</p>
+          <h1 id="page-title">Make today a<br><span>breath of fresh air.</span></h1>
+          <p class="hero-description">A few thoughtful changes can make a real difference. Tell us about your day and we’ll put together a practical plan for your home, your health, and your neighborhood.</p>
+          <div class="hero-note"><span aria-hidden="true">↗</span> Small steps. Measurable impact. Made for real life.</div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="sun"></div>
+          <div class="hill hill-back"></div>
+          <div class="hill hill-front"></div>
+          <div class="art-house"><div class="roof"></div><div class="house-body"><span></span><i></i></div></div>
+          <div class="art-tree tree-one"><b></b><i></i></div>
+          <div class="art-tree tree-two"><b></b><i></i></div>
+          <div class="art-cloud cloud-one"></div>
+          <div class="art-cloud cloud-two"></div>
+          <span class="art-label">A better day<br>starts close to home.</span>
+        </div>
+      </section>
+
+      <section class="planner-section" aria-labelledby="planner-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">YOUR DAY, YOUR WAY</p>
+            <h2 id="planner-title">Let’s make your clean-air plan</h2>
+          </div>
+          <span class="step-badge"><span>01</span> PERSONALIZE</span>
+        </div>
+
+        <form id="planner-form" class="planner-card">
+          <div class="form-grid">
+            <label class="field field-location">
+              <span class="field-label">Where are you today?</span>
+              <span class="field-hint">City or neighborhood</span>
+              <input id="location" name="location" type="text" placeholder="e.g. Delhi, India" autocomplete="address-level2" required maxlength="80">
+            </label>
+
+            <label class="field">
+              <span class="field-label">Outdoor air right now</span>
+              <span class="field-hint">Check your local AQI app or monitor</span>
+              <select id="air-quality" name="air-quality">
+                <option value="good">Good · 0–50</option>
+                <option value="moderate">Moderate · 51–100</option>
+                <option value="sensitive">Unhealthy for sensitive groups · 101–150</option>
+                <option value="unhealthy" selected>Unhealthy · 151–200</option>
+                <option value="very-unhealthy">Very unhealthy · 201–300</option>
+                <option value="hazardous">Hazardous · 301+</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Who are we planning for?</span>
+              <span class="field-hint">Choose what best fits your household</span>
+              <select id="household" name="household">
+                <option value="family">A mix of ages</option>
+                <option value="children">Children or teens</option>
+                <option value="older-adult">An older adult</option>
+                <option value="respiratory">Someone with a heart or lung condition</option>
+                <option value="general">Just me / other</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field-label">How do you usually get around?</span>
+              <span class="field-hint">Your most common commute</span>
+              <select id="commute" name="commute">
+                <option value="car">Drive alone</option>
+                <option value="transit">Public transit</option>
+                <option value="shared">Carpool or shared ride</option>
+                <option value="active">Walk or cycle</option>
+                <option value="remote">Work or study from home</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span class="field-label">One-way commute distance</span>
+              <span class="field-hint">Kilometres · approximate is fine</span>
+              <input id="distance" name="distance" type="number" min="0" max="300" step="1" value="8" inputmode="numeric">
+            </label>
+
+            <label class="field">
+              <span class="field-label">Commute days each week</span>
+              <span class="field-hint">Days you usually travel</span>
+              <select id="days" name="days">
+                <option value="1">1 day</option>
+                <option value="2">2 days</option>
+                <option value="3">3 days</option>
+                <option value="4">4 days</option>
+                <option value="5" selected>5 days</option>
+                <option value="6">6 days</option>
+                <option value="7">7 days</option>
+              </select>
+            </label>
+          </div>
+          <div class="form-footer">
+            <p><span aria-hidden="true">◉</span> Your details stay in this browser. No account needed.</p>
+            <button type="submit" class="submit-button">Build my plan <span aria-hidden="true">→</span></button>
+          </div>
+        </form>
+      </section>
+
+      <section id="plan" class="plan-section" aria-labelledby="plan-title" hidden aria-live="polite">
+        <div class="plan-heading">
+          <div>
+            <p class="eyebrow">YOUR PERSONALIZED PLAN <span id="plan-location"></span></p>
+            <h2 id="plan-title">A few good moves for today</h2>
+          </div>
+          <span id="aqi-chip" class="aqi-chip"></span>
+        </div>
+        <p id="plan-intro" class="plan-intro"></p>
+        <div class="plan-grid">
+          <article class="plan-card routine-card">
+            <div class="card-icon" aria-hidden="true">↗</div>
+            <p class="card-kicker">OUT AND ABOUT</p>
+            <h3>A gentler daily routine</h3>
+            <ul id="routine-list" class="advice-list"></ul>
+          </article>
+          <article class="plan-card home-card">
+            <div class="card-icon" aria-hidden="true">⌂</div>
+            <p class="card-kicker">YOUR INDOOR AIR</p>
+            <h3>Make home your clean-air space</h3>
+            <ul id="home-list" class="advice-list"></ul>
+          </article>
+          <article class="plan-card community-card">
+            <div class="card-icon" aria-hidden="true">✳</div>
+            <p class="card-kicker">A BETTER WAY FORWARD</p>
+            <h3>One sustainable swap</h3>
+            <ul id="swap-list" class="advice-list"></ul>
+          </article>
+        </div>
+        <aside class="impact-card">
+          <div class="impact-copy">
+            <span class="impact-icon" aria-hidden="true">↗</span>
+            <div>
+              <p class="card-kicker">YOUR WEEKLY RIPPLE EFFECT</p>
+              <h3 id="impact-title"></h3>
+              <p id="impact-description"></p>
+            </div>
+          </div>
+          <div class="impact-stat">
+            <strong id="impact-value"></strong>
+            <span id="impact-unit"></span>
+          </div>
+        </aside>
+        <p class="disclaimer"><strong>A quick note:</strong> This plan is general guidance, not medical advice or a live AQI reading. Air quality can change quickly—check your local environmental agency for current conditions and follow public-health advice. If anyone feels unwell, seek guidance from a qualified health professional.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a class="brand footer-brand" href="#" aria-label="Airwise home">
+        <span class="brand-mark" aria-hidden="true">a</span>
+        <span>airwise<span class="brand-period">.</span></span>
+      </a>
+      <p>Clearer choices, healthier communities.</p>
+    </footer>
+  </body>
+</html>
