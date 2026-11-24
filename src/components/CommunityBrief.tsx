@@ -24,9 +24,11 @@ const COLLECTIVE_ACTIONS_HI = [
 export function CommunityBrief({
   air,
   language,
+  onNotify,
 }: {
   air: AirQualityReport;
   language: Language;
+  onNotify?: (text: string, tone?: "info" | "success") => void;
 }) {
   const [copied, setCopied] = useState(false);
   const t = getCopy(language);
@@ -35,16 +37,16 @@ export function CommunityBrief({
 
   const whatsappText =
     language === "hi"
-      ? `🌿 *साँस (Saans) मोहल्ला एयर ब्रीफ़ — ${air.location.name}*\n` +
-        `📊 आज का CPCB AQI: *${air.cpcbAqi} (${band.labelHi})* | PM2.5: ${air.pollutants.pm2_5} µg/m³\n` +
-        `🕒 बाहर जाने का सबसे साफ समय: *${air.cleanestWindow.startLabel}–${air.cleanestWindow.endLabel}*\n\n` +
-        `✅ *3 सामूहिक कदम:*\n` +
+      ? `*साँस (Saans) मोहल्ला एयर ब्रीफ़ — ${air.location.name}*\n` +
+        `- आज का CPCB AQI: *${air.cpcbAqi} (${band.labelHi})* | PM2.5: ${air.pollutants.pm2_5} µg/m³\n` +
+        `- बाहर जाने का सबसे साफ समय: *${air.cleanestWindow.startLabel}–${air.cleanestWindow.endLabel}*\n\n` +
+        `*3 सामूहिक कदम:*\n` +
         collective.map((c, i) => `${i + 1}. ${c}`).join("\n") +
         `\n\nबाहर जाते समय फिट N95/FFP2 मास्क पहनें। यह सामान्य जानकारी है, चिकित्सीय सलाह नहीं।`
-      : `🌿 *Saans Community Air Brief — ${air.location.name}*\n` +
-        `📊 Today's CPCB AQI: *${air.cpcbAqi} (${air.categoryLabel})* | PM2.5: ${air.pollutants.pm2_5} µg/m³\n` +
-        `🕒 Cleanest outdoor window: *${air.cleanestWindow.startLabel}–${air.cleanestWindow.endLabel}*\n\n` +
-        `✅ *3 Collective Actions for Today:*\n` +
+      : `*Saans Community Air Brief — ${air.location.name}*\n` +
+        `- Today's CPCB AQI: *${air.cpcbAqi} (${air.categoryLabel})* | PM2.5: ${air.pollutants.pm2_5} µg/m³\n` +
+        `- Cleanest outdoor window: *${air.cleanestWindow.startLabel}–${air.cleanestWindow.endLabel}*\n\n` +
+        `*3 Collective Actions for Today:*\n` +
         collective.map((c, i) => `${i + 1}. ${c}`).join("\n") +
         `\n\nUse fitted N95/FFP2 outdoors in Poor+ air. Guidance only, not medical advice.`;
 
@@ -52,9 +54,9 @@ export function CommunityBrief({
     try {
       await navigator.clipboard.writeText(whatsappText);
       setCopied(true);
+      onNotify?.("WhatsApp air brief copied to clipboard", "success");
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      // Fallback textarea copy
       const ta = document.createElement("textarea");
       ta.value = whatsappText;
       document.body.appendChild(ta);
@@ -62,6 +64,7 @@ export function CommunityBrief({
       document.execCommand("copy");
       document.body.removeChild(ta);
       setCopied(true);
+      onNotify?.("WhatsApp air brief copied to clipboard", "success");
       setTimeout(() => setCopied(false), 2200);
     }
   };
@@ -143,6 +146,7 @@ export function CommunityBrief({
     link.href = url;
     link.download = `saans-air-brief-${air.cpcbAqi}.png`;
     link.click();
+    onNotify?.("Image card downloaded", "success");
   };
 
   return (

@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { DEFAULT_GEMINI_MODEL } from "@/lib/server/planner";
+import { getServerEnv } from "@/lib/server/env";
 
 export async function GET() {
+  const env = getServerEnv();
   return NextResponse.json({
     ok: true,
     service: "saans-urban-air",
-    geminiConfigured: Boolean(process.env.GEMINI_API_KEY?.trim()),
-    model: process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
+    geminiConfigured: Boolean(env.GEMINI_API_KEY),
+    model: env.GEMINI_MODEL,
     timestamp: new Date().toISOString(),
   });
 }

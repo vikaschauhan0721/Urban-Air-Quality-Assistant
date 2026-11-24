@@ -7,9 +7,26 @@ interface RateBucket {
 const RATE_LIMIT_BUCKETS = new Map<string, RateBucket>();
 const WINDOW_MS = 5 * 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 25;
+const MAX_BUCKETS = 500;
+
+function pruneBuckets(now: number): void {
+  for (const [key, b] of RATE_LIMIT_BUCKETS.entries()) {
+    if (b.timestamps.every((ts) => now - ts >= WINDOW_MS)) {
+      RATE_LIMIT_BUCKETS.delete(key);
+    }
+  }
+  while (RATE_LIMIT_BUCKETS.size >= MAX_BUCKETS) {
+    const oldest = RATE_LIMIT_BUCKETS.keys().next().value;
+    if (!oldest) break;
+    RATE_LIMIT_BUCKETS.delete(oldest);
+  }
+}
 
 export function checkRateLimit(clientKey: string): { allowed: boolean; retryAfterSec: number } {
   const now = Date.now();
+  if (RATE_LIMIT_BUCKETS.size >= MAX_BUCKETS / 2) {
+    pruneBuckets(now);
+  }
   const bucket = RATE_LIMIT_BUCKETS.get(clientKey) ?? { timestamps: [] };
   bucket.timestamps = bucket.timestamps.filter((ts) => now - ts < WINDOW_MS);
 

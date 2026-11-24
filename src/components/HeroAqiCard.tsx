@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Droplets, MapPin, Thermometer, Wind } from "lucide-react";
+import { Clock, Database, Droplets, MapPin, Thermometer, Wind } from "lucide-react";
 import { getCpcbBand, getUsBandKey } from "@/lib/aqi";
 import type { AirQualityReport, AqiScale, Language } from "@/lib/types";
 import { AqiCategoryBadge } from "./AqiBadge";
+import { InfoTooltip } from "./ui/InfoTooltip";
 
 export function HeroAqiCard({
   air,
@@ -66,10 +67,21 @@ export function HeroAqiCard({
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference * (1 - pct * 0.78);
 
+  const sourceLabel =
+    air.source === "simulated"
+      ? "Simulated Winter Smog (AQI 312)"
+      : air.source === "fixture"
+      ? "Offline Regional Baseline"
+      : air.source === "cache"
+      ? "Open-Meteo (10m cache)"
+      : "Open-Meteo Live";
+
+  const updatedTime = air.fetchedAt ? air.fetchedAt.slice(11, 16) + " UTC" : "";
+
   return (
     <section
       aria-live="polite"
-      className="hero-surface p-5 sm:p-7 relative overflow-hidden"
+      className="hero-surface p-5 sm:p-6 relative"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
@@ -127,6 +139,10 @@ export function HeroAqiCard({
                 label={categoryLabel}
                 language={language}
               />
+              <InfoTooltip
+                label={scale === "cpcb" ? "India CPCB AQI" : "US EPA AQI"}
+                explanation="0–50 Good, 51–100 Satisfactory, 101–200 Moderate, 201–300 Poor, 301–400 Very Poor, 401–500 Severe. Computed as the highest pollutant sub-index."
+              />
               <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)]">
                 <MapPin className="h-3.5 w-3.5 text-[var(--aqi-accent)]" aria-hidden="true" />
                 {air.location.name}
@@ -137,7 +153,7 @@ export function HeroAqiCard({
               {verdict}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-[var(--text-secondary)] pt-0.5">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-medium text-[var(--text-secondary)] pt-0.5">
               <span className="inline-flex items-center gap-1 tabular-nums">
                 <Thermometer className="h-3.5 w-3.5 text-[var(--aqi-accent)]" aria-hidden="true" />
                 {air.weather.temperatureC}°C · {air.weather.conditionLabel}
@@ -150,6 +166,19 @@ export function HeroAqiCard({
                 <Wind className="h-3.5 w-3.5 text-[var(--aqi-accent)]" aria-hidden="true" />
                 {air.weather.windKmh} km/h
               </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[var(--text-muted)] pt-1 border-t border-[var(--border-subtle)]">
+              <span className="inline-flex items-center gap-1">
+                <Database className="h-3 w-3" aria-hidden="true" />
+                Source: {sourceLabel}
+              </span>
+              {updatedTime && (
+                <span className="inline-flex items-center gap-1 tabular-nums">
+                  <Clock className="h-3 w-3" aria-hidden="true" />
+                  Last updated: {updatedTime}
+                </span>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AlertTriangle, Languages, Lock, RotateCcw, SlidersHorizontal, Users } from "lucide-react";
 import { getCopy } from "@/lib/i18n";
 import type { AqiScale, Language, UserProfile } from "@/lib/types";
@@ -160,6 +161,18 @@ export function ProfileControls({
             <RotateCcw className="h-4 w-4" />
             Reset local data
           </Button>
+        </div>
+
+        <div className="flex flex-wrap gap-4 border-t border-[var(--border-subtle)] pt-3 text-xs font-semibold">
+          <Link href="/settings" className="text-[var(--aqi-accent)] hover:underline">
+            Settings &amp; Data Sources
+          </Link>
+          <Link href="/privacy" className="text-[var(--aqi-accent)] hover:underline">
+            Privacy Policy
+          </Link>
+          <Link href="/disclaimer" className="text-[var(--aqi-accent)] hover:underline">
+            Health &amp; Safety Disclaimer
+          </Link>
         </div>
       </Card>
     </div>

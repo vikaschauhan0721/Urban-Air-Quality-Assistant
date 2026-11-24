@@ -50,6 +50,12 @@ npm run build
 npx playwright test
 ```
 
+## Hardening & Documentation
+- **Boot-time env validation**: `src/lib/server/env.ts` validates `GEMINI_API_KEY` and `GEMINI_MODEL` via Zod on server load.
+- **API & Security Guards**: Payload byte limits (`413`), malformed JSON handling (`400`), prompt-injection sanitization, per-IP sliding-window rate limiting (`429`), and security headers in `next.config.ts`.
+- **Dedicated Pages**: `/settings`, `/privacy`, `/disclaimer`, custom `not-found.tsx` (404), error boundaries (`error.tsx`, `global-error.tsx`), and dynamic `opengraph-image.tsx`.
+- **Architecture & Strategy Docs**: See [docs/PROJECT_MAP.md](docs/PROJECT_MAP.md) and [docs/LAUNCH_READINESS.md](docs/LAUNCH_READINESS.md).
+
 ## Cloud Run Deployment
 
 ```bash

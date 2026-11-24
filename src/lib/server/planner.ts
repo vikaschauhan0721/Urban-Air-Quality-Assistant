@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
+import { getServerEnv } from "./env";
 import { ACTION_CATALOGUE, CATALOGUE_BY_ID, type CatalogueAction } from "../catalogue";
 import { getCpcbBand } from "../aqi";
 import { computeDeterministicImpact } from "../impact";
@@ -166,7 +167,7 @@ async function callGeminiOnce(
   });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 7500);
 
   try {
     const responsePromise = ai.models.generateContent({
@@ -222,8 +223,9 @@ export async function generatePersonalizedPlan(
   profile: UserProfile,
   air: AirQualityReport
 ): Promise<PlanResponse> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+  const env = getServerEnv();
+  const apiKey = env.GEMINI_API_KEY;
+  const model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
   const fallback = buildRuleBasedPlan(profile, air);
   if (!apiKey) {
@@ -235,10 +237,30 @@ export async function generatePersonalizedPlan(
     try {
       geminiResult = await callGeminiOnce(apiKey, model, profile, air);
       break;
-    } catch {
-      if (attempt === 1) {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          level: "warn",
+          event: "gemini_plan_attempt_failed",
+          attempt: attempt + 1,
+          model,
+          message: msg.slice(0, 240),
+        })
+      );
+      const nonRetryable =
+        msg.includes("401") ||
+        msg.includes("403") ||
+        msg.includes("404") ||
+        msg.includes("429") ||
+        msg.includes("RESOURCE_EXHAUSTED") ||
+        msg.includes("UNAVAILABLE") ||
+        msg.includes("503");
+      if (attempt === 1 || nonRetryable) {
         return fallback;
       }
+      await new Promise((r) => setTimeout(r, 250));
     }
   }
 

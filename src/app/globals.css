@@ -31,19 +31,18 @@
 .card-surface {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-card);
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-card);
 }
 
 .hero-surface {
   background: linear-gradient(
-    145deg,
+    180deg,
     var(--aqi-hero-from) 0%,
-    var(--aqi-hero-via) 48%,
     var(--aqi-hero-to) 100%
   );
   border: 1px solid var(--aqi-accent-border);
-  border-radius: var(--radius-hero);
+  border-radius: var(--radius-panel);
   box-shadow: var(--shadow-hero);
 }
 

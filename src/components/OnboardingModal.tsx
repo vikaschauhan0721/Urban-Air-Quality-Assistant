@@ -55,31 +55,46 @@ export function OnboardingModal({
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
 
-  // Open-Meteo Geocoding search-as-you-type
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  // Open-Meteo Geocoding search-as-you-type with AbortController
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
       return;
     }
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       setSearching(true);
+      setSearchError(null);
       try {
         const res = await fetch(
           `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
             trimmed
-          )}&count=5&language=en&format=json`
+          )}&count=5&language=en&format=json`,
+          { signal: controller.signal }
         );
         if (res.ok) {
           const data = (await res.json()) as { results?: GeoResult[] };
           setResults(data.results ?? []);
+          if (!data.results || data.results.length === 0) {
+            setSearchError("No matching cities found. Try another spelling or quick city below.");
+          }
+        } else {
+          setSearchError("City search is temporarily unavailable. Pick a quick city below.");
         }
-      } catch {
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
         setResults([]);
+        setSearchError("Offline or network blocked. Pick a quick city below.");
       } finally {
         setSearching(false);
       }
     }, 260);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query]);
 
   if (!open) return null;
@@ -147,22 +162,28 @@ export function OnboardingModal({
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm p-0 sm:p-4"
     >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 1, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 16 }}
-        className="w-full max-w-lg max-h-[92dvh] overflow-y-auto bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-t-[24px] sm:rounded-[24px] shadow-2xl p-5 sm:p-6"
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.14 }}
+        className="w-full max-w-lg max-h-[92dvh] overflow-y-auto bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-t-[var(--radius-panel)] sm:rounded-[var(--radius-panel)] shadow-[var(--shadow-modal)] p-5 sm:p-6"
       >
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--aqi-accent)]">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Step {step} of 3 · Under 30 sec
+              Step {step} of 3 · 20-sec setup · Skippable
             </span>
             <h2 id="onboarding-title" className="text-xl font-bold mt-1">
               {step === 1 && "Where are you breathing today?"}
               {step === 2 && "Who is in your household?"}
               {step === 3 && "Your home & daily commute"}
             </h2>
+            {step === 1 && (
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                Free &amp; low-cost steps first. Your data stays on this device only.
+              </p>
+            )}
           </div>
           <button
             type="button"
@@ -207,12 +228,22 @@ export function OnboardingModal({
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search city or neighbourhood (e.g. Delhi, Pune)..."
                   aria-label="Search city"
-                  className="w-full min-h-[46px] pl-10 pr-4 rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-canvas)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+                  className="w-full min-h-[46px] pl-10 pr-4 rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--bg-canvas)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
                 />
               </div>
 
+              {query.trim().length === 1 && (
+                <p className="text-xs text-[var(--text-muted)]">
+                  Type at least 2 characters to search Open-Meteo cities.
+                </p>
+              )}
+
               {searching && (
                 <p className="text-xs text-[var(--text-muted)]">Searching Open-Meteo cities...</p>
+              )}
+
+              {!searching && searchError && query.trim().length >= 2 && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">{searchError}</p>
               )}
 
               {visibleResults.length > 0 && (
