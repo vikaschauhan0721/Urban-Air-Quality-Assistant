@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
@@ -41,6 +42,7 @@ import { OnboardingModal } from "./OnboardingModal";
 import { PlanSection } from "./PlanSection";
 import { PollutantGrid } from "./PollutantGrid";
 import { ProfileControls } from "./ProfileControls";
+import { ToastBanner, type ToastMessage } from "./ui/Toast";
 import { Badge, Button, Card, Skeleton } from "./ui/primitives";
 
 type TabId = "home" | "plan" | "ask" | "community" | "profile";
@@ -72,6 +74,11 @@ export function SaansApp() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [inspectedAction, setInspectedAction] = useState<PlanAction | null>(null);
   const [isOffline, setIsOffline] = useState(false);
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+
+  const notify = useCallback((text: string, tone: "info" | "success" = "info") => {
+    setToast({ id: Date.now(), text, tone });
+  }, []);
 
   const airAbortRef = useRef<AbortController | null>(null);
   const planAbortRef = useRef<AbortController | null>(null);
@@ -158,7 +165,8 @@ export function SaansApp() {
 
   const toggleCompleted = useCallback((id: string) => {
     setCompletedIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      const adding = !prev.includes(id);
+      const next = adding ? [...prev, id] : prev.filter((x) => x !== id);
       try {
         localStorage.setItem(
           COMPLETED_STORAGE_KEY,
@@ -167,9 +175,12 @@ export function SaansApp() {
       } catch {
         // Ignore
       }
+      if (adding) {
+        notify("Action marked done — protected air tally updated", "success");
+      }
       return next;
     });
-  }, []);
+  }, [notify]);
 
   const fetchAir = useCallback(async (targetProfile: UserProfile, sim: boolean) => {
     airAbortRef.current?.abort();
@@ -323,14 +334,26 @@ export function SaansApp() {
     };
     persistProfile(next);
     setShowOnboarding(false);
+    notify("Demo family loaded (New Delhi · Rohini)", "success");
   };
 
   const handleScaleChange = (scale: AqiScale) => {
     persistProfile({ ...profile, aqiScale: scale });
+    notify(`Switched scale to ${scale === "cpcb" ? "India CPCB" : "US EPA AQI"}`);
   };
 
   const handleLanguageChange = (lang: Language) => {
     persistProfile({ ...profile, language: lang });
+    notify(lang === "hi" ? "भाषा हिन्दी में बदली गई" : "Language set to English");
+  };
+
+  const handleSimulatorToggle = (next: boolean) => {
+    setSimulateSmog(next);
+    notify(
+      next
+        ? "Winter Smog Simulator enabled (AQI ~312)"
+        : "Switched back to live local air data"
+    );
   };
 
   const handleReset = () => {
@@ -343,6 +366,7 @@ export function SaansApp() {
     setPlan(null);
     setProfile(DEFAULT_PROFILE);
     setShowOnboarding(true);
+    notify("Local profile & check-offs reset");
   };
 
   const navItems: Array<{ id: TabId; label: string; icon: typeof Home }> = [
@@ -408,9 +432,9 @@ export function SaansApp() {
           <button
             type="button"
             data-testid="desktop-simulator-toggle"
-            onClick={() => setSimulateSmog((s) => !s)}
+            onClick={() => handleSimulatorToggle(!simulateSmog)}
             className={cn(
-              "w-full min-h-[44px] px-3 rounded-2xl border text-xs font-semibold flex items-center justify-between cursor-pointer transition-colors",
+              "w-full min-h-[44px] px-3 rounded-[var(--radius-control)] border text-xs font-semibold flex items-center justify-between cursor-pointer transition-colors",
               simulateSmog
                 ? "bg-[var(--aqi-accent)] text-white border-[var(--aqi-accent)]"
                 : "bg-[var(--bg-canvas)] border-[var(--border-subtle)] text-[var(--text-secondary)] hover:bg-[var(--bg-muted)]"
@@ -429,7 +453,7 @@ export function SaansApp() {
               onClick={() =>
                 handleScaleChange(profile.aqiScale === "cpcb" ? "us" : "cpcb")
               }
-              className="min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-muted)] cursor-pointer"
+              className="min-h-[44px] rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--bg-canvas)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-muted)] cursor-pointer"
             >
               {profile.aqiScale === "cpcb" ? t.badges.cpcb : t.badges.us}
             </button>
@@ -438,11 +462,23 @@ export function SaansApp() {
               onClick={() =>
                 handleLanguageChange(profile.language === "en" ? "hi" : "en")
               }
-              className="min-h-[44px] rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-muted)] inline-flex items-center justify-center gap-1 cursor-pointer"
+              className="min-h-[44px] rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--bg-canvas)] text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-muted)] inline-flex items-center justify-center gap-1 cursor-pointer"
             >
               <Languages className="h-3.5 w-3.5" />
               {profile.language === "en" ? "हिन्दी" : "EN"}
             </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-[11px] font-medium text-[var(--text-muted)]">
+            <Link href="/settings" className="hover:text-[var(--text-primary)] hover:underline">
+              Settings
+            </Link>
+            <Link href="/privacy" className="hover:text-[var(--text-primary)] hover:underline">
+              Privacy
+            </Link>
+            <Link href="/disclaimer" className="hover:text-[var(--text-primary)] hover:underline">
+              Disclaimer
+            </Link>
           </div>
         </div>
       </aside>
@@ -467,7 +503,7 @@ export function SaansApp() {
             <button
               type="button"
               data-testid="mobile-simulator-toggle"
-              onClick={() => setSimulateSmog((s) => !s)}
+              onClick={() => handleSimulatorToggle(!simulateSmog)}
               className={cn(
                 "min-h-[44px] px-2.5 rounded-xl border text-[11px] font-bold cursor-pointer",
                 simulateSmog
@@ -648,11 +684,21 @@ export function SaansApp() {
                           {completedCount} {t.plan.progressLabel}. Follow today’s personalized
                           indoor hacks and low-emission swaps.
                         </p>
-                        <Button className="w-full" onClick={() => setActiveTab("plan")}>
-                          <CheckCircle2 className="h-4 w-4" />
-                          {t.home.openPlan}
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <Button className="w-full" onClick={() => setActiveTab("plan")}>
+                            <CheckCircle2 className="h-4 w-4" />
+                            {t.home.openPlan}
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setActiveTab("community")}
+                          >
+                            <Share2 className="h-4 w-4" />
+                            Share Brief
+                          </Button>
+                        </div>
                       </Card>
                     </div>
                   </div>
@@ -687,7 +733,11 @@ export function SaansApp() {
 
           {/* COMMUNITY TAB */}
           {activeTab === "community" && air && (
-            <CommunityBrief air={air} language={profile.language} />
+            <CommunityBrief
+              air={air}
+              language={profile.language}
+              onNotify={notify}
+            />
           )}
 
           {/* PROFILE TAB */}
@@ -695,7 +745,7 @@ export function SaansApp() {
             <ProfileControls
               profile={profile}
               simulateSmog={simulateSmog}
-              onToggleSimulator={setSimulateSmog}
+              onToggleSimulator={handleSimulatorToggle}
               onChangeScale={handleScaleChange}
               onChangeLanguage={handleLanguageChange}
               onLoadDemoHousehold={handleLoadDemo}
@@ -703,6 +753,23 @@ export function SaansApp() {
               onResetAll={handleReset}
             />
           )}
+
+          <footer className="border-t border-[var(--border-subtle)] pt-4 pb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
+            <span>
+              Saans · Open-Meteo Air &amp; Weather · Deterministic Indoor Impact Math
+            </span>
+            <div className="flex items-center gap-4 font-medium">
+              <Link href="/settings" className="hover:text-[var(--text-primary)] hover:underline">
+                Settings
+              </Link>
+              <Link href="/privacy" className="hover:text-[var(--text-primary)] hover:underline">
+                Privacy
+              </Link>
+              <Link href="/disclaimer" className="hover:text-[var(--text-primary)] hover:underline">
+                Disclaimer
+              </Link>
+            </div>
+          </footer>
         </main>
       </div>
 
@@ -742,6 +809,7 @@ export function SaansApp() {
           onComplete={(nextProfile) => {
             persistProfile(nextProfile);
             setShowOnboarding(false);
+            notify("Household profile saved locally", "success");
           }}
           onSkip={() => {
             persistProfile({ ...profile, onboarded: true });
@@ -756,6 +824,8 @@ export function SaansApp() {
         language={profile.language}
         onClose={() => setInspectedAction(null)}
       />
+
+      <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
     </div>
   );
 }

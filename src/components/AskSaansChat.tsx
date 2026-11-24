@@ -49,7 +49,11 @@ export function AskSaansChat({
 
   const sendMessage = async (textToSend: string) => {
     const trimmed = textToSend.trim();
-    if (!trimmed || streaming) return;
+    if (streaming) return;
+    if (trimmed.length < 2) {
+      setError("Please type a short question (at least 2 characters).");
+      return;
+    }
 
     setError(null);
     const nextHistory: ChatMessage[] = [...messages, { role: "user", content: trimmed }];
@@ -183,13 +187,16 @@ export function AskSaansChat({
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (error) setError(null);
+            }}
             placeholder={t.ask.placeholder}
             aria-label={t.ask.placeholder}
             maxLength={600}
-            className="flex-1 min-h-[46px] rounded-2xl border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
+            className="flex-1 min-h-[46px] rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-[var(--bg-canvas)] px-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]"
           />
-          <Button type="submit" disabled={streaming || input.trim().length === 0}>
+          <Button type="submit" disabled={streaming}>
             <Send className="h-4 w-4" />
             <span className="hidden sm:inline">{t.ask.send}</span>
           </Button>

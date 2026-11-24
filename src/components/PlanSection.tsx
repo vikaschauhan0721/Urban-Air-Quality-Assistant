@@ -19,6 +19,7 @@ import { getCopy } from "@/lib/i18n";
 import type { ActionCategory, Language, PlanAction, PlanResponse } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { Badge, Button, Card, Skeleton } from "./ui/primitives";
+import { InfoTooltip } from "./ui/InfoTooltip";
 
 export function PlanSection({
   plan,
@@ -127,18 +128,25 @@ export function PlanSection({
                 <h1 className="text-xl font-bold tracking-tight">{t.plan.title}</h1>
                 <Badge tone="accent">
                   <Sparkles className="h-3 w-3" aria-hidden="true" />
-                  {plan.planSource === "gemini" ? "Gemini" : "Smart Rules"}
+                  {plan.planSource === "gemini" ? "Gemini + Physics" : "Smart Rules + Physics"}
                 </Badge>
+                <Badge tone="success">Free &amp; Low-Cost First</Badge>
               </div>
-              <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 {plan.focusNote}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] px-3.5 py-2 text-center">
-              <p className="text-[11px] text-[var(--text-muted)]">{t.plan.airProtected}</p>
+            <div className="rounded-[var(--radius-control)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] px-3.5 py-2 text-center">
+              <p className="text-[11px] text-[var(--text-muted)] flex items-center justify-center gap-1">
+                {t.plan.airProtected}
+                <InfoTooltip
+                  label="Deterministic PM2.5 math"
+                  explanation="Computed from documented room infiltration (I_f) and filter CADR decay constants—never estimated by the AI."
+                />
+              </p>
               <p
                 data-testid="protected-pm25-tally"
                 className="text-lg font-extrabold tabular-nums text-[var(--aqi-accent)]"
@@ -146,7 +154,7 @@ export function PlanSection({
                 -{totalPm25Reduced} µg/m³
               </p>
             </div>
-            <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] px-3.5 py-2 text-center">
+            <div className="rounded-[var(--radius-control)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] px-3.5 py-2 text-center">
               <p className="text-[11px] text-[var(--text-muted)]">{t.plan.co2Saved}</p>
               <p
                 data-testid="protected-co2-tally"
@@ -163,7 +171,7 @@ export function PlanSection({
       <div
         role="tablist"
         aria-label="Action plan categories"
-        className="grid grid-cols-3 gap-2 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-1.5"
+        className="grid grid-cols-3 gap-2 rounded-[var(--radius-panel)] bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-1.5"
       >
         {(
           [

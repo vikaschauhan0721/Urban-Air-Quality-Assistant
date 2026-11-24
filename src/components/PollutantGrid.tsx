@@ -96,7 +96,7 @@ export function PollutantGrid({
           return (
             <div
               key={p.key}
-              className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-canvas)] p-3.5 flex flex-col justify-between gap-2"
+              className="rounded-[var(--radius-control)] border border-[var(--border-subtle)] bg-[var(--bg-canvas)] p-3.5 flex flex-col justify-between gap-2"
             >
               <div className="flex items-baseline justify-between gap-1">
                 <span className="text-sm font-bold">{p.label}</span>
@@ -107,7 +107,7 @@ export function PollutantGrid({
                 <span className="text-2xl font-extrabold tabular-nums">{val}</span>
                 {elevated && (
                   <span className="text-[11px] font-semibold text-[var(--aqi-accent)]">
-                    High
+                    Above limit
                   </span>
                 )}
               </div>
@@ -124,6 +124,9 @@ export function PollutantGrid({
 
               <p className="text-[11px] leading-snug text-[var(--text-secondary)]">
                 {language === "hi" ? p.plainHi : p.plain}
+              </p>
+              <p className="text-[10px] text-[var(--text-muted)] tabular-nums">
+                {p.whoGuide} {p.unit}
               </p>
             </div>
           );
