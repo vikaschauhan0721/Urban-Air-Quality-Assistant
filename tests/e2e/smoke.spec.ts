@@ -41,4 +41,14 @@ test("core user journey: onboarding -> dashboard -> simulator -> plan -> impact 
   await page.getByRole("button", { name: /^Community$/i }).click();
   await expect(page.getByText(/3 Collective Neighbourhood Actions/i)).toBeVisible();
   await expect(page.getByTestId("copy-whatsapp-btn")).toBeVisible();
+
+  // 8. Dedicated Trust, Settings & 404 routes
+  await page.goto("/privacy");
+  await expect(page.getByRole("heading", { name: /Privacy Policy/i })).toBeVisible();
+  await page.goto("/disclaimer");
+  await expect(page.getByRole("heading", { name: /Health & Safety Disclaimer/i })).toBeVisible();
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { name: /Settings & Data Attribution/i })).toBeVisible();
+  await page.goto("/does-not-exist-404");
+  await expect(page.getByRole("heading", { name: /Page not found \(404\)/i })).toBeVisible();
 });

@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { z } from "zod";
+import { getServerEnv } from "./env";
 import { ACTION_CATALOGUE, CATALOGUE_BY_ID, type CatalogueAction } from "../catalogue";
 import { getCpcbBand } from "../aqi";
 import { computeDeterministicImpact } from "../impact";
@@ -222,8 +223,9 @@ export async function generatePersonalizedPlan(
   profile: UserProfile,
   air: AirQualityReport
 ): Promise<PlanResponse> {
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
-  const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+  const env = getServerEnv();
+  const apiKey = env.GEMINI_API_KEY;
+  const model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
   const fallback = buildRuleBasedPlan(profile, air);
   if (!apiKey) {
@@ -251,6 +253,8 @@ export async function generatePersonalizedPlan(
         msg.includes("401") ||
         msg.includes("403") ||
         msg.includes("404") ||
+        msg.includes("429") ||
+        msg.includes("RESOURCE_EXHAUSTED") ||
         msg.includes("UNAVAILABLE") ||
         msg.includes("503");
       if (attempt === 1 || nonRetryable) {

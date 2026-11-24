@@ -536,44 +536,42 @@ export function SaansApp() {
         </header>
 
         <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 space-y-5">
-          {/* Status Banners: Offline / Simulator / Demo Data */}
-          {(isOffline || air?.isSimulated || air?.isDemoData || profile.isDemoProfile) && (
-            <div className="flex flex-wrap items-center gap-2">
-              {isOffline && (
-                <Badge tone="warning">
-                  <WifiOff className="h-3.5 w-3.5" />
-                  {t.badges.offline}
-                </Badge>
-              )}
-              {air?.isSimulated && (
-                <Badge tone="accent" className="font-bold">
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  {t.badges.simulating}
-                </Badge>
-              )}
-              {!air?.isSimulated && air?.isDemoData && (
-                <Badge tone="neutral">
-                  <ShieldAlert className="h-3.5 w-3.5" />
-                  {t.badges.demoData}
-                </Badge>
-              )}
-              {profile.isDemoProfile && (
-                <Badge tone="neutral">
-                  Demo Family Active ({profile.location.name})
-                </Badge>
-              )}
-            </div>
-          )}
+          {/* Status Banners: Offline / Simulator / Demo Data (reserved min-height prevents CLS) */}
+          <div className="min-h-[30px] flex flex-wrap items-center gap-2">
+            {isOffline && (
+              <Badge tone="warning">
+                <WifiOff className="h-3.5 w-3.5" />
+                {t.badges.offline}
+              </Badge>
+            )}
+            {air?.isSimulated && (
+              <Badge tone="accent" className="font-bold">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {t.badges.simulating}
+              </Badge>
+            )}
+            {!air?.isSimulated && air?.isDemoData && (
+              <Badge tone="neutral">
+                <ShieldAlert className="h-3.5 w-3.5" />
+                {t.badges.demoData}
+              </Badge>
+            )}
+            {profile.isDemoProfile && (
+              <Badge tone="neutral">
+                Demo Family Active ({profile.location.name})
+              </Badge>
+            )}
+          </div>
 
           {/* HOME TAB */}
           {activeTab === "home" && (
             <>
               {airLoading && !air ? (
                 <div className="space-y-5">
-                  <Skeleton className="h-48 w-full" />
+                  <Skeleton className="h-[236px] w-full" />
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                    <Skeleton className="h-72 lg:col-span-7" />
-                    <Skeleton className="h-72 lg:col-span-5" />
+                    <Skeleton className="h-80 lg:col-span-7" />
+                    <Skeleton className="h-80 lg:col-span-5" />
                   </div>
                 </div>
               ) : airError && !air ? (

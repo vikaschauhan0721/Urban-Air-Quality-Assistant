@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getServerEnv } from "@/lib/server/env";
 import { logServerEvent, readJsonBodyWithLimit } from "@/lib/server/http";
 import { DEFAULT_GEMINI_MODEL } from "@/lib/server/planner";
 import { checkRateLimit, getClientIp, sanitizeUserPrompt } from "@/lib/server/security";
@@ -114,8 +115,9 @@ export async function POST(req: NextRequest) {
       return streamText(refusal);
     }
 
-    const apiKey = process.env.GEMINI_API_KEY?.trim();
-    const model = process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
+    const env = getServerEnv();
+    const apiKey = env.GEMINI_API_KEY;
+    const model = env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
 
     if (!apiKey) {
       return streamText(buildGroundedFallbackReply(cleaned, profile, air));

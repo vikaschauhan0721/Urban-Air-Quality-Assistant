@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "Saans — Urban Air Quality Assistant",
   description:
     "Clear, honest daily choices to protect your family's lungs — starting with free steps first. Live India CPCB & US AQI, deterministic indoor impact math, and bilingual guidance.",
