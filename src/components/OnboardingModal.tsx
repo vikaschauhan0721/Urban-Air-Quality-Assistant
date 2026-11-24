@@ -55,31 +55,46 @@ export function OnboardingModal({
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
 
-  // Open-Meteo Geocoding search-as-you-type
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  // Open-Meteo Geocoding search-as-you-type with AbortController
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
       return;
     }
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       setSearching(true);
+      setSearchError(null);
       try {
         const res = await fetch(
           `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
             trimmed
-          )}&count=5&language=en&format=json`
+          )}&count=5&language=en&format=json`,
+          { signal: controller.signal }
         );
         if (res.ok) {
           const data = (await res.json()) as { results?: GeoResult[] };
           setResults(data.results ?? []);
+          if (!data.results || data.results.length === 0) {
+            setSearchError("No matching cities found. Try another spelling or quick city below.");
+          }
+        } else {
+          setSearchError("City search is temporarily unavailable. Pick a quick city below.");
         }
-      } catch {
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
         setResults([]);
+        setSearchError("Offline or network blocked. Pick a quick city below.");
       } finally {
         setSearching(false);
       }
     }, 260);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [query]);
 
   if (!open) return null;
@@ -213,6 +228,10 @@ export function OnboardingModal({
 
               {searching && (
                 <p className="text-xs text-[var(--text-muted)]">Searching Open-Meteo cities...</p>
+              )}
+
+              {!searching && searchError && query.trim().length >= 2 && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">{searchError}</p>
               )}
 
               {visibleResults.length > 0 && (

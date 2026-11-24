@@ -166,7 +166,7 @@ async function callGeminiOnce(
   });
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12000);
+  const timeout = setTimeout(() => controller.abort(), 7500);
 
   try {
     const responsePromise = ai.models.generateContent({
@@ -235,10 +235,28 @@ export async function generatePersonalizedPlan(
     try {
       geminiResult = await callGeminiOnce(apiKey, model, profile, air);
       break;
-    } catch {
-      if (attempt === 1) {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(
+        JSON.stringify({
+          ts: new Date().toISOString(),
+          level: "warn",
+          event: "gemini_plan_attempt_failed",
+          attempt: attempt + 1,
+          model,
+          message: msg.slice(0, 240),
+        })
+      );
+      const nonRetryable =
+        msg.includes("401") ||
+        msg.includes("403") ||
+        msg.includes("404") ||
+        msg.includes("UNAVAILABLE") ||
+        msg.includes("503");
+      if (attempt === 1 || nonRetryable) {
         return fallback;
       }
+      await new Promise((r) => setTimeout(r, 250));
     }
   }
 

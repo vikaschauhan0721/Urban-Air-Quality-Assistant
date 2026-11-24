@@ -20,6 +20,20 @@ interface CacheEntry {
 
 const AIR_CACHE = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_CACHE_ENTRIES = 500;
+
+function pruneAirCache(now: number): void {
+  for (const [k, entry] of AIR_CACHE.entries()) {
+    if (entry.expiresAt <= now) {
+      AIR_CACHE.delete(k);
+    }
+  }
+  while (AIR_CACHE.size >= MAX_CACHE_ENTRIES) {
+    const oldestKey = AIR_CACHE.keys().next().value;
+    if (!oldestKey) break;
+    AIR_CACHE.delete(oldestKey);
+  }
+}
 
 function cacheKey(loc: UserLocation): string {
   return `${loc.latitude.toFixed(2)},${loc.longitude.toFixed(2)}`;
@@ -231,9 +245,19 @@ export async function getAirQualityReport(
       cleanestWindow: findCleanestWindow(hourly),
     };
 
+    pruneAirCache(Date.now());
     AIR_CACHE.set(key, { report, expiresAt: Date.now() + CACHE_TTL_MS });
     return report;
-  } catch {
+  } catch (err) {
+    console.warn(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        level: "warn",
+        event: "open_meteo_fallback",
+        location: location.name,
+        message: err instanceof Error ? err.message : String(err),
+      })
+    );
     return buildFixtureReport(location);
   }
 }

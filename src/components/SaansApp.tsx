@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -47,6 +47,8 @@ type TabId = "home" | "plan" | "ask" | "community" | "profile";
 
 const PROFILE_STORAGE_KEY = "saans_profile_v1";
 const COMPLETED_STORAGE_KEY = "saans_completed_v1";
+const LAST_AIR_STORAGE_KEY = "saans_last_air_v1";
+const LAST_PLAN_STORAGE_KEY = "saans_last_plan_v1";
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
@@ -71,7 +73,14 @@ export function SaansApp() {
   const [inspectedAction, setInspectedAction] = useState<PlanAction | null>(null);
   const [isOffline, setIsOffline] = useState(false);
 
-  // Hydrate profile & check-offs from localStorage + register PWA service worker
+  const airAbortRef = useRef<AbortController | null>(null);
+  const planAbortRef = useRef<AbortController | null>(null);
+  const profileRef = useRef<UserProfile>(profile);
+  useEffect(() => {
+    profileRef.current = profile;
+  }, [profile]);
+
+  // Hydrate profile, cached offline snapshots & check-offs from localStorage + register PWA service worker
   useEffect(() => {
     let active = true;
     queueMicrotask(() => {
@@ -95,6 +104,23 @@ export function SaansApp() {
           const parsedDone = JSON.parse(rawDone) as { date?: string; ids?: string[] };
           if (parsedDone.date === todayKey() && Array.isArray(parsedDone.ids)) {
             setCompletedIds(parsedDone.ids);
+          }
+        }
+
+        const rawAir = localStorage.getItem(LAST_AIR_STORAGE_KEY);
+        if (rawAir) {
+          const parsedAir = AirQualityReportSchema.safeParse(JSON.parse(rawAir));
+          if (parsedAir.success) {
+            setAir(parsedAir.data);
+            setAirLoading(false);
+          }
+        }
+
+        const rawPlan = localStorage.getItem(LAST_PLAN_STORAGE_KEY);
+        if (rawPlan) {
+          const parsedPlan = PlanResponseSchema.safeParse(JSON.parse(rawPlan));
+          if (parsedPlan.success) {
+            setPlan(parsedPlan.data);
           }
         }
       } catch {
@@ -146,6 +172,10 @@ export function SaansApp() {
   }, []);
 
   const fetchAir = useCallback(async (targetProfile: UserProfile, sim: boolean) => {
+    airAbortRef.current?.abort();
+    const controller = new AbortController();
+    airAbortRef.current = controller;
+
     setAirLoading(true);
     setAirError(null);
     try {
@@ -157,19 +187,34 @@ export function SaansApp() {
         country: targetProfile.location.country ?? "India",
         simulate: sim ? "smog" : "false",
       });
-      const res = await fetch(`/api/air?${qs.toString()}`);
+      const res = await fetch(`/api/air?${qs.toString()}`, {
+        signal: controller.signal,
+      });
       if (!res.ok) throw new Error("Could not load air quality data.");
       const data = AirQualityReportSchema.parse(await res.json());
       setAir(data);
+      setPlan(null);
+      try {
+        localStorage.setItem(LAST_AIR_STORAGE_KEY, JSON.stringify(data));
+      } catch {
+        // Ignore storage quota errors
+      }
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
       setAirError(err instanceof Error ? err.message : "Failed to load air quality.");
     } finally {
-      setAirLoading(false);
+      if (airAbortRef.current === controller) {
+        setAirLoading(false);
+      }
     }
   }, []);
 
   const fetchPlan = useCallback(
     async (targetProfile: UserProfile, targetAir: AirQualityReport) => {
+      planAbortRef.current?.abort();
+      const controller = new AbortController();
+      planAbortRef.current = controller;
+
       setPlanLoading(true);
       setPlanError(null);
       try {
@@ -177,14 +222,23 @@ export function SaansApp() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ profile: targetProfile, air: targetAir }),
+          signal: controller.signal,
         });
         if (!res.ok) throw new Error("Could not build today's plan.");
         const data = PlanResponseSchema.parse(await res.json());
         setPlan(data);
+        try {
+          localStorage.setItem(LAST_PLAN_STORAGE_KEY, JSON.stringify(data));
+        } catch {
+          // Ignore storage quota errors
+        }
       } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
         setPlanError(err instanceof Error ? err.message : "Failed to generate plan.");
       } finally {
-        setPlanLoading(false);
+        if (planAbortRef.current === controller) {
+          setPlanLoading(false);
+        }
       }
     },
     []
@@ -193,25 +247,32 @@ export function SaansApp() {
   useEffect(() => {
     if (!hydrated) return;
     const timer = setTimeout(() => {
-      void fetchAir(profile, simulateSmog);
+      void fetchAir(profileRef.current, simulateSmog);
     }, 0);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      airAbortRef.current?.abort();
+    };
   }, [
     hydrated,
     profile.location.latitude,
     profile.location.longitude,
     profile.location.name,
+    profile.location.region,
+    profile.location.country,
     simulateSmog,
     fetchAir,
-    profile,
   ]);
 
   useEffect(() => {
     if (!hydrated || !air) return;
     const timer = setTimeout(() => {
-      void fetchPlan(profile, air);
+      void fetchPlan(profileRef.current, air);
     }, 0);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      planAbortRef.current?.abort();
+    };
   }, [
     hydrated,
     air,
@@ -227,7 +288,6 @@ export function SaansApp() {
     profile.lifestyle.budget,
     profile.language,
     fetchPlan,
-    profile,
   ]);
 
   // Apply adaptive AQI theme band globally
@@ -276,8 +336,11 @@ export function SaansApp() {
   const handleReset = () => {
     localStorage.removeItem(PROFILE_STORAGE_KEY);
     localStorage.removeItem(COMPLETED_STORAGE_KEY);
+    localStorage.removeItem(LAST_AIR_STORAGE_KEY);
+    localStorage.removeItem(LAST_PLAN_STORAGE_KEY);
     setCompletedIds([]);
     setSimulateSmog(false);
+    setPlan(null);
     setProfile(DEFAULT_PROFILE);
     setShowOnboarding(true);
   };

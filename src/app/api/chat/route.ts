@@ -1,16 +1,19 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { logServerEvent, readJsonBodyWithLimit } from "@/lib/server/http";
 import { DEFAULT_GEMINI_MODEL } from "@/lib/server/planner";
 import { checkRateLimit, getClientIp, sanitizeUserPrompt } from "@/lib/server/security";
 import { AirQualityReportSchema, ChatMessageSchema, UserProfileSchema } from "@/lib/types";
 
-const ChatRequestSchema = z.object({
-  messages: z.array(ChatMessageSchema).min(1).max(12),
-  profile: UserProfileSchema,
-  air: AirQualityReportSchema,
-  planSummary: z.string().max(1500).optional().default(""),
-});
+const ChatRequestSchema = z
+  .object({
+    messages: z.array(ChatMessageSchema).min(1).max(12),
+    profile: UserProfileSchema,
+    air: AirQualityReportSchema,
+    planSummary: z.string().max(1500).optional().default(""),
+  })
+  .strict();
 
 function buildGroundedFallbackReply(
   question: string,
@@ -86,8 +89,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body: unknown = await req.json();
-    const parsed = ChatRequestSchema.safeParse(body);
+    const bodyRead = await readJsonBodyWithLimit(req, 32_000);
+    if (!bodyRead.ok) {
+      return bodyRead.response;
+    }
+
+    const parsed = ChatRequestSchema.safeParse(bodyRead.data);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid chat request", issues: parsed.error.issues },
@@ -154,7 +161,10 @@ export async function POST(req: NextRequest) {
                 controller.enqueue(encoder.encode(chunk.text));
               }
             }
-          } catch {
+          } catch (streamErr) {
+            logServerEvent("warn", "chat_stream_fallback", {
+              message: streamErr instanceof Error ? streamErr.message : String(streamErr),
+            });
             controller.enqueue(
               encoder.encode(buildGroundedFallbackReply(cleaned, profile, air))
             );
@@ -170,10 +180,16 @@ export async function POST(req: NextRequest) {
           "Cache-Control": "no-store",
         },
       });
-    } catch {
+    } catch (initErr) {
+      logServerEvent("warn", "chat_init_fallback", {
+        message: initErr instanceof Error ? initErr.message : String(initErr),
+      });
       return streamText(buildGroundedFallbackReply(cleaned, profile, air));
     }
-  } catch {
+  } catch (err) {
+    logServerEvent("error", "chat_route_error", {
+      message: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json(
       { error: "Unable to process chat request right now" },
       { status: 500 }
